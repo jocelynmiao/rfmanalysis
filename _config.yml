@@ -1,0 +1,7 @@
+minima:
+  social_links:
+    - title: GitHub
+      icon: github
+      url: "https://github.com/jocelynmiao/rfmanalysis"
+
+theme: minima

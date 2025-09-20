@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>rfmanalysis</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="rfmanalysis" />
+<meta property="og:locale" content="en_US" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="rfmanalysis" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="rfmanalysis" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","headline":"rfmanalysis","name":"rfmanalysis","url":"http://localhost:4000/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="rfmanalysis" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">rfmanalysis</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="home"><p> </p>
+<h1 id="analysis-of-customer-segmentation-with-rfm">Analysis of Customer Segmentation with RFM</h1>
+
+<p>by Jocelyn Miao</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>With more stores going online and tracking their data, how can companies keep track of their customers, and better yet, retain them? By using several methods of customer groupings, we can target and specialize tacticts on specific customers. I will be visualizing RFM, KMeans, and CLV models for customer segmentation in this project.</p>
+
+<p>The dataset I will be using is <a href="https://archive.ics.uci.edu/dataset/352/online+retail">UCI Online Retail</a>, which “contains all the transactions occurring between 01/12/2010 and 09/12/2011 for a UK-based and registered non-store online retail.” Here is a brief description of the dataset from UCI:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable Name</th>
+      <th>Role</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">InvoiceNo</code></td>
+      <td>ID</td>
+      <td>A 6-digit integral number uniquely assigned to each transaction. If this code starts with letter ‘c’, it indicates a cancellation</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">StockCode</code></td>
+      <td>ID</td>
+      <td>Categorical	a 5-digit integral number uniquely assigned to each distinct product</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Description</code></td>
+      <td>Feature</td>
+      <td>Categorical	product name</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Quantity</code></td>
+      <td>Feature</td>
+      <td>Integer	the quantities of each product (item) per transaction</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">InvoiceDate</code></td>
+      <td>Feature</td>
+      <td>Date	the day and time when each transaction was generated</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">UnitPrice</code></td>
+      <td>Feature</td>
+      <td>Continuous	product price per unit	(sterling)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CustomerID</code></td>
+      <td>Feature</td>
+      <td>Categorical	a 5-digit integral number uniquely assigned to each customer</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Country</code></td>
+      <td>Feature</td>
+      <td>Categorical	the name of the country where each customer resides</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h2 id="data-cleaning">Data Cleaning</h2>
+
+<p>To clean the dataset, columns with null values in <code class="language-plaintext highlighter-rouge">CustomerID</code> will be dropped, since there is no way to recover lost IDs that are needed for analysis. Duplicate rows and rows that correspond to the same transaction and refund were dropped. Rows with values <code class="language-plaintext highlighter-rouge">'POST'</code>, <code class="language-plaintext highlighter-rouge">DOT</code>, and <code class="language-plaintext highlighter-rouge">CRUK</code> in the <code class="language-plaintext highlighter-rouge">StockCode</code> column are used for postage or donations and do not contribute to sales data, so they were dropped. One thing to note is the StockCode <code class="language-plaintext highlighter-rouge">M</code> represents manual help, which could represent an item, refund, discount, or more (unknown), so I did not remove these rows. I removed leftover invoices starting with “C” to remove refund only transactions. Lastly, I created a column <code class="language-plaintext highlighter-rouge">TotalSale</code> that uses the quantity and price to describe the overall value of the transaction.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">InvoiceNo</th>
+      <th style="text-align: left">StockCode</th>
+      <th style="text-align: left">Description</th>
+      <th style="text-align: right">Quantity</th>
+      <th style="text-align: left">InvoiceDate</th>
+      <th style="text-align: right">UnitPrice</th>
+      <th style="text-align: right">CustomerID</th>
+      <th style="text-align: left">Country</th>
+      <th style="text-align: right">TotalSale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">536365</td>
+      <td style="text-align: left">85123A</td>
+      <td style="text-align: left">WHITE HANGING HEART T-LIGHT HOLDER</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: left">2010-12-01 08:26:00</td>
+      <td style="text-align: right">2.55</td>
+      <td style="text-align: right">17850</td>
+      <td style="text-align: left">United Kingdom</td>
+      <td style="text-align: right">15.3</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">536365</td>
+      <td style="text-align: left">71053</td>
+      <td style="text-align: left">WHITE METAL LANTERN</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: left">2010-12-01 08:26:00</td>
+      <td style="text-align: right">3.39</td>
+      <td style="text-align: right">17850</td>
+      <td style="text-align: left">United Kingdom</td>
+      <td style="text-align: right">20.34</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">536365</td>
+      <td style="text-align: left">84406B</td>
+      <td style="text-align: left">CREAM CUPID HEARTS COAT HANGER</td>
+      <td style="text-align: right">8</td>
+      <td style="text-align: left">2010-12-01 08:26:00</td>
+      <td style="text-align: right">2.75</td>
+      <td style="text-align: right">17850</td>
+      <td style="text-align: left">United Kingdom</td>
+      <td style="text-align: right">22</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">536365</td>
+      <td style="text-align: left">84029G</td>
+      <td style="text-align: left">KNITTED UNION FLAG HOT WATER BOTTLE</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: left">2010-12-01 08:26:00</td>
+      <td style="text-align: right">3.39</td>
+      <td style="text-align: right">17850</td>
+      <td style="text-align: left">United Kingdom</td>
+      <td style="text-align: right">20.34</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">536365</td>
+      <td style="text-align: left">84029E</td>
+      <td style="text-align: left">RED WOOLLY HOTTIE WHITE HEART.</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: left">2010-12-01 08:26:00</td>
+      <td style="text-align: right">3.39</td>
+      <td style="text-align: right">17850</td>
+      <td style="text-align: left">United Kingdom</td>
+      <td style="text-align: right">20.34</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<h2 id="exploratory-analysis">Exploratory Analysis</h2>
+
+<p>What countries are users purchasing from? Outside of the United Kingdom being the majority, the dataset has users from several countries, with many from Germany and France.</p>
+
+<iframe src="assets/userdistribution.html" width="500" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p>In which month did customers make the most transactions? The month of November.</p>
+<iframe src="assets/mosttransactions.html" width="700" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p><br /></p>
+
+<h2 id="rfm-grouping">RFM Grouping</h2>
+
+<p>Now we can move on to calculating RFM scores for customers and grouping them for different sales tactics. I will be aggregating the dataframe to make columns for Recency (time since the customer last made a purchase), Frequency (how many transactions they make), and Monetary (how much total they have spent) values. Then we can convert this to a quartile rank from 1-5 as the actual RFM Segment. Below is the head of the new dataframe:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">CustomerID</th>
+      <th style="text-align: right">Frequency</th>
+      <th style="text-align: right">Recency</th>
+      <th style="text-align: right">Monetary</th>
+      <th style="text-align: right">R</th>
+      <th style="text-align: right">F</th>
+      <th style="text-align: right">M</th>
+      <th style="text-align: right">RFM_Segment</th>
+      <th style="text-align: left">Loyal</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">12346</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">0</td>
+      <td style="text-align: right">77183.6</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">515</td>
+      <td style="text-align: left">False</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12347</td>
+      <td style="text-align: right">7</td>
+      <td style="text-align: right">365</td>
+      <td style="text-align: right">615.714</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">155</td>
+      <td style="text-align: left">False</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12348</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: right">283</td>
+      <td style="text-align: right">308.91</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">4</td>
+      <td style="text-align: right">3</td>
+      <td style="text-align: right">143</td>
+      <td style="text-align: left">False</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12349</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">0</td>
+      <td style="text-align: right">1457.55</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">515</td>
+      <td style="text-align: left">False</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12350</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">0</td>
+      <td style="text-align: right">294.4</td>
+      <td style="text-align: right">5</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">3</td>
+      <td style="text-align: right">513</td>
+      <td style="text-align: left">False</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>I will categorize customers with a score of <code class="language-plaintext highlighter-rouge">333</code> or higher to be Loyal, and customers under that to be Not Loyal. Below is the average recency, frequency, and monetary values of each group.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Loyal</th>
+      <th style="text-align: right">Recency</th>
+      <th style="text-align: right">Frequency</th>
+      <th style="text-align: right">Monetary</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">False</td>
+      <td style="text-align: right">137.585</td>
+      <td style="text-align: right">3.98186</td>
+      <td style="text-align: right">437.308</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">True</td>
+      <td style="text-align: right">81.9403</td>
+      <td style="text-align: right">2.96269</td>
+      <td style="text-align: right">544.037</td>
+    </tr>
+  </tbody>
+</table>
+
+<iframe src="assets/rfmc.html" width="500" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p>To create a model to predict loyalty, I chose a decision tree classifier model using the <code class="language-plaintext highlighter-rouge">sklearn</code> library. My model found an accuracy of 98% on determining if a customer would be loyal based off the recency, frequency, and monetary values of a customer.</p>
+
+<p><img src="/assets/treeclf.png" alt="Decision Tree" /></p>
+
+<p><br /></p>
+
+<h2 id="kmeans">KMeans</h2>
+
+<p>Another method of clustering, KMeans, can be used to classify these users. I will use the Recency, Frequency, and Monetary values previously calculated and scale it, then use the elbow test to determine the number of clusters.</p>
+
+<iframe src="assets/elbow.html" width="500" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p>Here, around 4 clusters is the elbow point. Next we can make an actual model with 4 clusters, and add it to the dataframe for each customer. The dataframe below shows the mean for each category for each group.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">Cluster</th>
+      <th style="text-align: right">Recency</th>
+      <th style="text-align: right">Frequency</th>
+      <th style="text-align: right">Monetary</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">0</td>
+      <td style="text-align: right">27.508</td>
+      <td style="text-align: right">1.61218</td>
+      <td style="text-align: right">395.742</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">352.211</td>
+      <td style="text-align: right">28.7719</td>
+      <td style="text-align: right">793.778</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">2</td>
+      <td style="text-align: right">102.5</td>
+      <td style="text-align: right">1.5</td>
+      <td style="text-align: right">80709.9</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">3</td>
+      <td style="text-align: right">265.28</td>
+      <td style="text-align: right">5.45686</td>
+      <td style="text-align: right">414.016</td>
+    </tr>
+  </tbody>
+</table>
+
+<iframe src="assets/clusteringusers.html" width="500" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p>The groups are:</p>
+<ul>
+  <li>0: High frequency customers: promote higher monetary sales</li>
+  <li>1: New customers: entice with limited-time discounts</li>
+  <li>2: High spending customers: reward with wholesale discounts</li>
+  <li>3: Average customers: promote with points rewards</li>
+</ul>
+
+<p>The difference between RFM and KMeans is we have much more distinguished groups based on distances as shown in the graph, while the RFM analysis had overlaping customers in different areas. KMeans tended to group customers more on features, so different sales tactics can be targeted towards these features.</p>
+
+<p><br /></p>
+
+<h2 id="modeling-clv">Modeling CLV</h2>
+
+<p>Let’s move on to finding the customer lifetime value of these customers for one year. I will be using the <code class="language-plaintext highlighter-rouge">BetaGeoFitter</code> and <code class="language-plaintext highlighter-rouge">GammaGammaFitter</code> from the <code class="language-plaintext highlighter-rouge">lifetimes</code> package to calculate the CLV. Customers with only one purchase will be filtered out for the models.</p>
+
+<p>The Beta-Geometric/NBD model is a type of Buy Till You Die model that describes the dropout process of customers and can predict how many transactions a customer will make. I will combine this with the Gamma-Gamma Submodel can predict the profit for each customer. After fitting both models, we can use the <code class="language-plaintext highlighter-rouge">customer_lifetime_value</code> function under the Gamma-Gamma model to create a column for the dataframe with the CLV of each customer, and graph this with the RFM graph.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">CustomerID</th>
+      <th style="text-align: right">frequency</th>
+      <th style="text-align: right">recency</th>
+      <th style="text-align: right">T</th>
+      <th style="text-align: right">monetary_value</th>
+      <th style="text-align: right">CLV</th>
+      <th style="text-align: right">group</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">12347</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: right">365</td>
+      <td style="text-align: right">367</td>
+      <td style="text-align: right">599.702</td>
+      <td style="text-align: right">3007.45</td>
+      <td style="text-align: right">4</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12348</td>
+      <td style="text-align: right">3</td>
+      <td style="text-align: right">283</td>
+      <td style="text-align: right">358</td>
+      <td style="text-align: right">261.48</td>
+      <td style="text-align: right">911.965</td>
+      <td style="text-align: right">2</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12352</td>
+      <td style="text-align: right">6</td>
+      <td style="text-align: right">260</td>
+      <td style="text-align: right">296</td>
+      <td style="text-align: right">244.29</td>
+      <td style="text-align: right">1705.14</td>
+      <td style="text-align: right">3</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12356</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: right">303</td>
+      <td style="text-align: right">325</td>
+      <td style="text-align: right">269.905</td>
+      <td style="text-align: right">774.421</td>
+      <td style="text-align: right">1</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12358</td>
+      <td style="text-align: right">1</td>
+      <td style="text-align: right">149</td>
+      <td style="text-align: right">150</td>
+      <td style="text-align: right">523.2</td>
+      <td style="text-align: right">1300.52</td>
+      <td style="text-align: right">2</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Here are the descriptive statistics for <code class="language-plaintext highlighter-rouge">CLV</code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: right">CLV</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">count</td>
+      <td style="text-align: right">2784</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">mean</td>
+      <td style="text-align: right">2662.11</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">std</td>
+      <td style="text-align: right">8683.81</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">min</td>
+      <td style="text-align: right">312.874</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">25%</td>
+      <td style="text-align: right">817.444</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">50%</td>
+      <td style="text-align: right">1366.32</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">75%</td>
+      <td style="text-align: right">2364.95</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">max</td>
+      <td style="text-align: right">221407</td>
+    </tr>
+  </tbody>
+</table>
+
+<iframe src="assets/clv.html" width="500" height="500" scrolling="no" frameborder="0"></iframe>
+
+<p>We can see that most customers have a CLV around the mean but there are a few outliers with high scores. CLV values can also be used to create sementations for customers (as seen in the <code class="language-plaintext highlighter-rouge">Group</code> column, like with RFM earlier).</p>
+
+<p>The BGF model can also be used to predict the how many purchases customers will make within the next 30 days (and many other predictions). Here are the top 5 for this dataset:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: right">CustomerID</th>
+      <th style="text-align: right">Expected Purchases</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: right">14911</td>
+      <td style="text-align: right">8.9461</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">12748</td>
+      <td style="text-align: right">7.72459</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">17841</td>
+      <td style="text-align: right">7.5888</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">15311</td>
+      <td style="text-align: right">6.09582</td>
+    </tr>
+    <tr>
+      <td style="text-align: right">14606</td>
+      <td style="text-align: right">6.02791</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Overall, there are several ways to segment customers with different benefits and drawbacks depending on what analysis should be done on customer databases. With more data on customers, we could extend our modeling to predicting what customers will buy and when.</p>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">rfmanalysis</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">rfmanalysis</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p></p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
