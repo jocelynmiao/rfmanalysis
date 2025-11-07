@@ -3,6 +3,11 @@
 
 by Jocelyn Miao
 
+## Dashboard
+![Dashboard Screenshot](assets/dashboard.png)
+
+[Tableau Dashboard Link](https://public.tableau.com/views/retail_17621348524080/Dashboard1?:language=en-US&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link)
+
 ## Overview
 
 With more stores going online and tracking their data, how can companies keep track of their customers, and better yet, retain them? By using several methods of customer groupings, we can target and specialize tacticts on specific customers. I will be visualizing RFM, KMeans, and CLV models for customer segmentation in this project.
